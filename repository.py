@@ -56,11 +56,15 @@ class Repository:
         else:
             parents = [current_hash]
 
-        commit_hash = str(uuid.uuid4())[:6]
+        while True:
+            commit_hash = str(uuid.uuid4())[:6]
+            if commit_hash not in self.commits:
+                break
+
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         new_commit = Commit(commit_hash, message, self.current_user, timestamp, parents)
         self.commits[commit_hash] = new_commit
-        self.commits[self.head] = commit_hash
+        self.branches[self.head] = commit_hash
 
         return new_commit
