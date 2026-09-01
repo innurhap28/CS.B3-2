@@ -3,6 +3,7 @@
 import uuid
 from datetime import datetime
 from commit import Commit
+from branch import Branch
 
 class Repository:
     def __init__(self):
@@ -14,15 +15,15 @@ class Repository:
     def init_repository(self, user_name):
         self.current_user = user_name
 
-        self.branches["main"] = None
+        self.branches["main"] = Branch("main", None)
         self.head = "main"
 
     def create_branch(self, branch_name):
         if branch_name in self.branches:
             raise ValueError(f"Branch '{branch_name}' already exists.")
 
-        commit_hash = self.branches[self.head]
-        self.branches[branch_name] = commit_hash
+        current_hash = self.branches[self.head].commit_hash
+        self.branches[branch_name] = Branch(branch_name, current_hash)
 
     def switch_branch(self, branch_name):
         if branch_name not in self.branches:
@@ -33,7 +34,7 @@ class Repository:
         return self.head
 
     def get_current_commit(self):
-        commit_hash = self.branches[self.head]
+        commit_hash = self.branches[self.head].commit_hash
         if commit_hash is None:
             return None
         return self.commits[commit_hash]
@@ -49,7 +50,7 @@ class Repository:
 
         if self.current_user is None:
             raise RuntimeError("Repository not initialized with a user.")
-        current_hash = self.branches[self.head]
+        current_hash = self.branches[self.head].commit_hash
         if current_hash is None:
             parents = []
         else:
@@ -64,6 +65,6 @@ class Repository:
 
         new_commit = Commit(commit_hash, message, self.current_user, timestamp, parents)
         self.commits[commit_hash] = new_commit
-        self.branches[self.head] = commit_hash
+        self.branches[self.head].commit_hash = commit_hash
 
         return new_commit
