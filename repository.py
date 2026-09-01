@@ -19,16 +19,14 @@ class Repository:
 
     def create_branch(self, branch_name):
         if branch_name in self.branches:
-            print("Error: Branch already exists")
-            return
+            raise ValueError(f"Branch '{branch_name}' already exists.")
 
         commit_hash = self.branches[self.head]
         self.branches[branch_name] = commit_hash
 
     def switch_branch(self, branch_name):
         if branch_name not in self.branches:
-            print("Error: Branch not exists")
-            return
+            raise ValueError(f"Branch '{branch_name}' does not exist.")
         self.head = branch_name
 
     def get_current_branch(self):
@@ -42,14 +40,15 @@ class Repository:
 
     def get_commit(self, commit_hash):
         if commit_hash not in self.commits:
-            print("Error: Commit not found")
-            return None
+            raise KeyError(f"Commit '{commit_hash}' not found.")
         return self.commits[commit_hash]
 
     def create_commit(self, message):
+        if not message or not message.strip():
+            raise ValueError("Commit message cannot be empty.")
+
         if self.current_user is None:
-            print("Error: Repository not initialized with a user")
-            return None
+            raise RuntimeError("Repository not initialized with a user.")
         current_hash = self.branches[self.head]
         if current_hash is None:
             parents = []
