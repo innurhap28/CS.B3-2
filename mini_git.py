@@ -7,7 +7,7 @@ from sort import Sort
 class MiniGit:
     def __init__(self):
         self.repository = Repository()
-        self.graph = Graph()
+        self.graph = Graph(self.repository)
         self.sort = Sort()
 
     def init(self, user_name):
@@ -45,6 +45,8 @@ class MiniGit:
     def log_sorted(self, sort_by):
         commits = self.graph.log()
         if sort_by == "date":
+            return self.sort.insertion_sort(commits, lambda commit: commit.timestamp)
+        if sort_by == "author":
             return self.sort.insertion_sort(commits, lambda commit: commit.author)
 
         raise ValueError("Invalid sort option")
