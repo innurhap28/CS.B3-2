@@ -4,6 +4,7 @@ import uuid
 from datetime import datetime
 from commit import Commit
 from branch import Branch
+from search import Search
 
 class Repository:
     def __init__(self):
@@ -11,6 +12,7 @@ class Repository:
         self.branches = {}
         self.head = None
         self.current_user = None
+        self.search = Search()
 
     def init_repository(self, user_name):
         self.current_user = user_name
@@ -67,4 +69,6 @@ class Repository:
         self.commits[commit_hash] = new_commit
         self.branches[self.head].commit_hash = commit_hash
 
+        self.search.add_commit(new_commit)
+        
         return new_commit

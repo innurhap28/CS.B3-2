@@ -1,1 +1,150 @@
 # 커밋 그래프 탐색, PATH, ANCESTORS, LOG
+
+class Graph:
+    def __init__(self, repository):
+        self.repository = repository
+
+# ------------------------
+# ANCESTORS
+# ------------------------
+
+    def ancestors(self, commit_hash):
+        commit = self.repository.get_commit(commit_hash)
+        result = []
+        visited = set()
+        self._dfs(commit, result, visited)
+        return result
+
+    def _dfs(self, commit, result, visited):
+        for parent_hash in commit.parents:
+            if parent_hash in visited:
+                continue
+
+            visited.add(parent_hash)
+            parent = self.repository.get_commit(parent_hash)
+            result.append(parent)
+            self._dfs(parent, result, visited)
+
+# ------------------------
+# PATH
+# ------------------------
+
+    def path(self, start_hash, target_hash):
+        self.repository.get_commit(start_hash)
+        self.repository.get_commit(target_hash)
+
+        if start_hash == target_hash:
+            return [start_hash]
+
+        queue = [[start_hash]]
+        visited = {start_hash}
+
+        while queue:
+            current_path = queue.pop(0)
+            current_hash = current_path[-1]
+            neighbors = self._get_neighbors(current_hash)
+
+            for neighbor_hash in neighbors:
+                if neighbor_hash in visited:
+                    continue
+
+                new_path = current_path + [neighbor_hash]
+                if neighbor_hash == target_hash:
+                    return new_path
+
+                visited.add(neighbor_hash)
+                queue.append(new_path)
+
+        return None
+
+    def _get_neighbors(self, commit_hash):
+        neighbors = []
+        commit = self.repository.get_commit(commit_hash)
+        for parent_hash in commit.parents:
+            neighbors.append(parent_hash)
+
+        for other_hash, other_commit in self.repository.commits.items():
+            if commit_hash in other_commit.parents:
+                neighbors.append(other_hash)
+
+        return neighbors
+
+# ------------------------
+# LOG
+# ------------------------
+
+    def log(self):
+        commits = list(self.repository.commits.values())
+        child_count = {}
+
+        # 남은 자식 수 카운트
+        for commit in commits:
+            child_count[commit.hash] = 0
+        for commit in commits:
+            for parent_hash in commit.parents:
+                child_count[parent_hash] += 1
+
+        # 자식이 없는 커밋부터
+        queue = []
+        for commit in commits:
+            if child_count[commit.hash] == 0:
+                queue.append(commit.hash)
+
+        result = []
+
+        while queue:
+            current_hash = queue.pop(0)
+            current_commit = self.repository.get_commit(current_hash)
+
+            result.append(current_commit)
+
+            # 현재 커밋의 부모 처리
+            for parent_hash in current_commit.parents:
+                child_count[parent_hash] -= 1
+
+                if child_count[parent_hash] == 0:
+                    queue.append(parent_hash)
+
+        # 자식 -> 부모 순서로 처리됐으므로 뒤집음 (reverse() 사용 X)
+        reversed_result = []
+
+        for i in range(len(result) - 1, - 1, - 1):
+            reversed_result.append(result[i])
+
+        return reversed_result
+
+
+
+# test
+from repository import Repository
+
+repo = Repository()
+
+repo.init_repository("Alice")
+
+a = repo.create_commit("Initial commit")
+b = repo.create_commit("Add login")
+c = repo.create_commit("Add payment")
+
+graph = Graph(repo)
+
+print("ANCESTORS")
+ancestors = graph.ancestors(c.hash)
+
+for commit in ancestors:
+    print(commit.hash, commit.message)
+
+print()
+print("PATH")
+
+result = graph.path(a.hash, c.hash)
+
+print(result)
+
+print()
+print("LOG")
+
+logs = graph.log()
+
+for commit in logs:
+    print(commit.hash, commit.message)
