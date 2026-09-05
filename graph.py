@@ -22,7 +22,7 @@ class Graph:
 
             visited.add(parent_hash)
             parent = self.repository.get_commit(parent_hash)
-            result.append(parent)
+            result.append(parent) # 해시 문자열만 필요하다면 parent.hash로 변경
             self._dfs(parent, result, visited)
 
 # ------------------------
@@ -42,9 +42,8 @@ class Graph:
         while queue:
             current_path = queue.pop(0)
             current_hash = current_path[-1]
-            neighbors = self._get_neighbors(current_hash)
 
-            for neighbor_hash in neighbors:
+            for neighbor_hash in self._get_neighbors(current_hash):
                 if neighbor_hash in visited:
                     continue
 
